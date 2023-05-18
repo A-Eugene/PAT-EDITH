@@ -1,8 +1,14 @@
 from machine import Pin
-from time import sleep
+import time
+import ssd1306
 
-pin = Pin(1, Pin.OUT)
+# Using GP1 for VCC, breadboard limitation
+VCC = Pin(1, Pin.OUT)
+VCC.on()
 
-while True:
-    pin.toggle()
-    sleep(1)
+def main():
+  while True:
+    VCC.toggle()
+    time.sleep(1)
+
+main()

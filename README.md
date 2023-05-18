@@ -11,5 +11,6 @@ A device used as a proof of concept for future developed AR glasses which combin
 
 ## Build Log
 - **18 May 2023**
-  - Initialized the project using Pico-W-Go 2.18 VScode Extension
+  - Initialized the project using Pico-W-Go 2.18 VScode Extension (later versions seems to have problem initializing vREPL terminal to Pico)
   - Initialized the project to github
+  - Added ./main.py which adds ./src folder as a package and runs ./src/main.py by importing it on startup, so ./src/main.py can run on startup while that and other scripts remain organized in ./src instead of floating all over the root folder.

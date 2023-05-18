@@ -9,7 +9,4 @@
     "python.analysis.extraPaths": [
         ".vscode\\Pico-W-Stub\\stubs"
     ],
-    "python.analysis.ignore": [
-        "src\\ssd1306.py"
-    ]
 }
