@@ -1,3 +1,4 @@
+# boot.py -- run on boot-up
 """
 
   This is the main file that is executed on startup by the Raspberry PI.
@@ -14,4 +15,4 @@ import sys
 
 sys.path.append('src')
 
-from src import main
+from src import App
