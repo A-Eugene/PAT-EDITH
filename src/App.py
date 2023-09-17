@@ -1,9 +1,13 @@
 from machine import Pin, SoftI2C, Timer
+import gc
+from micropython import mem_info, alloc_emergency_exception_buf
 
 from Libraries.ssd1306 import SSD1306_I2C
 from Libraries.ESP32BLE import ESP32_BLE
-from Libraries.BLEJSONInstruction import BLEInstructionParser
+from Libraries.BLEJSONInstruction import BLEJSONInstruction
 from Displays.SecondaryDisplays import SecondaryDisplays
+from Displays.Teleprompter import Teleprompter
+from Displays.Stopwatch import Stopwatch
 
 """ BEGIN CONFIGURATION """
 
@@ -14,9 +18,11 @@ SCL_PIN = 22  # Green
 # Display Information
 DISPLAY_WIDTH = 128
 DISPLAY_HEIGHT = 64
-MIRRORED = False
+MIRRORED = True
 
 """ END CONFIGURATION """
+
+alloc_emergency_exception_buf(320)
 
 display = SSD1306_I2C(
     width=DISPLAY_WIDTH,
@@ -27,32 +33,64 @@ display = SSD1306_I2C(
     )
 )
 
-# Possible values: Startup, WaitingConnection, Ready
-currentDisplay = 'Startup'
+bluetooth = ESP32_BLE(name='EDITH', blinkLED=False) 
+BLEInstruction = BLEJSONInstruction(bluetooth)
+
+# Load features
 secondaryDisplays = SecondaryDisplays(display)
+teleprompter = Teleprompter(display)
+stopwatch = Stopwatch(display)
 
-bluetooth = ESP32_BLE(name='EDITH', blinkLED=False)
-instructionParser = BLEInstructionParser(bluetooth)
-
+# Bluetooth Event Handler
 def on_bluetooth_connected():
-    global currentDisplay
-    currentDisplay = 'Ready'
-    secondaryDisplays.showReady()
+    secondaryDisplays.showHome()
 
 def on_bluetooth_disconnected():
-    global currentDisplay
-    currentDisplay = 'WaitingConnection'
     secondaryDisplays.waitForConnection()
 
-def on_bluetooth_instruction(instruction):
-    print(instruction)
-    instructionParser.sendMessage('Created InstructionParser.py; Since Bluetooth Low Energy is limited to 20 bytes (characters) per message, it is a challenge to send large amount of instructional data. InstructionParser.py is a library that decodes array of strings into a JSON instruction for easier use.')
+def on_bluetooth_message(message):
+    # print(message)
+    BLEInstruction.feedChunk(message)
 
+def on_bluetooth_instruction(instruction):
+    try:
+        print(instruction)
+        # {"feature": "Home"} 
+        if instruction['feature'] == 'Home':
+            secondaryDisplays.showHome()
+            return
+        
+        if instruction['feature'] == 'Teleprompter':
+            if 'action' in instruction:
+                if instruction['action'] == 'Start':
+                    if 'script' in instruction.keys() and 'speed' in instruction.keys():
+                        teleprompter.script = instruction['script']
+                        teleprompter.speed = instruction['speed']
+                        
+                        teleprompter.start()
+                elif instruction['action'] == 'Stop': 
+                    teleprompter.stop()
+            else: 
+                teleprompter.showDefault()
+
+        if instruction['feature'] == 'Stopwatch':
+            if 'action' in instruction:
+                if instruction['action'] == 'Start':
+                    stopwatch.start()
+                elif instruction['action'] == 'Stop':
+                    stopwatch.stop()
+            else:
+                stopwatch.showDefault()
+
+    except Exception as e:
+        print('Error:', e) #
+        
+# Bluetooth Events
 bluetooth.on('connected', on_bluetooth_connected)
 bluetooth.on('disconnected', on_bluetooth_disconnected)
-bluetooth.on('message', instructionParser.feedChunk)
+bluetooth.on('message', on_bluetooth_message)
 
-instructionParser.on_instruction(on_bluetooth_instruction)
+BLEInstruction.on_instruction(on_bluetooth_instruction) 
 
 def main():
     if MIRRORED:
@@ -61,5 +99,11 @@ def main():
     secondaryDisplays.startup()
     secondaryDisplays.waitForConnection()
 
+    e = Timer(10) 
+    e.init(
+        period=1000,
+        mode=Timer.PERIODIC,
+        callback=lambda t: gc.collect()
+    )
 
-main()
+main() 

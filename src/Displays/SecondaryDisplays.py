@@ -3,7 +3,7 @@ import framebuf
 
 from Libraries.ssd1306 import SSD1306_I2C
 
-from Displays.Images import LogoMDC
+from Displays.Images import EDITH
 
 """
     Character size: 8x8 pixels
@@ -14,11 +14,11 @@ class SecondaryDisplays():
     def __init__(self, display: SSD1306_I2C):
         self.display = display
         
-    def showReady(self):
+    def showHome(self):
         self.display.fill(0)
         self.display.rect(0, 0, 128, 64, 1)
         self.display.text('Device', 40, 22)
-        self.display.text('Ready!', 40, 34)
+        self.display.text('Connected', 28, 34)
         self.display.show()
         
     def waitForConnection(self):
@@ -32,7 +32,7 @@ class SecondaryDisplays():
     def startup(self):
         self.display.fill(0)
 
-        fb = framebuf.FrameBuffer(LogoMDC, 64, 64, framebuf.MONO_HLSB)
+        fb = framebuf.FrameBuffer(EDITH, 64, 64, framebuf.MONO_HLSB)
         self.display.blit(fb, 32, 0)
         self.display.show()
 

@@ -5,11 +5,21 @@ It's some sort of smart display mounted on your glasses while projecting images 
 
 ![ESP32 Wroom DevKit Pinout](https://www.mischianti.org/wp-content/uploads/2020/11/ESP32-DOIT-DEV-KIT-v1-pinout-mischianti.png)
 
-## GPIO Mapping
-| Port   | Description |
+## Female to Female Cable Mapping
+| Port   | Color |
 | ----------- | ----------- |
-| GP1      | SCL      |
-| GP2   | SDA     |
+| 3V3      | Orange (ideally red, but the red one is not rigid)      |
+| GND   | Black     |
+| GP22      | Brown      |
+| GP21   | White     |
+
+## Breadboard Cable Mapping
+| Port   | Color |
+| ----------- | ----------- |
+| 3V3      | Red     |
+| GND   | Black     |
+| GP22      | Green      |
+| GP21   | Gray  |
 
 ## Build Log
 - **18 May 2023**
@@ -50,3 +60,10 @@ It's some sort of smart display mounted on your glasses while projecting images 
     ```
     the solution is to ignore empty dictionary instruction in Micropython. Whenever it encounters {} it will just clear self.message and return. 
 - Found a some different game-changing behaviour on Micropython's json module, more explained in BLEJSONInstruction.py
+- Okay, I think BLEJSONInstruction.py is ready, time to translate it to Typescript
+- **3 June 2023**
+  - Removed .strip() in _IRQ_GATTS_WRITE since it corrupts spaces in BLEJSONInstruction
+  - Teleprompter seems to work fine EXCEPT ESP32 seems to crash after Stop is pressed. Out of RAM? The console said it was stackoverflow, probably need some optimization.
+- **5 June 2023**
+  - Stopwatch works, however tick's delay does not seem to be valid (too slow)
+  - Stopwatch needs number formatting. Example: 00:01:53 instead of 0:1:53.

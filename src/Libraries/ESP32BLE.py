@@ -71,7 +71,7 @@ class ESP32_BLE():
             for callback in self.on_disconnected_callbacks:
                 callback()
         elif event == 3: #_IRQ_GATTS_WRITE:
-            message = self.ble.gatts_read(self.rx).decode('UTF-8').strip()
+            message = self.ble.gatts_read(self.rx).decode('UTF-8') 
 
             # Call all callbacks
             for callback in self.on_message_callbacks:
@@ -99,7 +99,7 @@ class ESP32_BLE():
         adv_data = bytearray('\x02\x01\x02', 'UTF-8') + bytearray((len(name) + 1, 0x09)) + name
         self.ble.gap_advertise(100, adv_data)
         # adv_data
-        # raw: 0x02010209094553503332424C45
+        # raw: 0x02010209094553503332424C45 
         # b'x02x01x02ttESP32BLE'
         #
         # 0x02 - General discoverable mode

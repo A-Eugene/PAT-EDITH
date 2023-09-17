@@ -23,7 +23,7 @@
 import json
 from Libraries.ESP32BLE import ESP32_BLE
 
-class BLEInstructionParser:
+class BLEJSONInstruction:
     def __init__(self, bluetooth: ESP32_BLE):
         self.message = ""
         self.bluetooth = bluetooth
@@ -34,15 +34,22 @@ class BLEInstructionParser:
 
     def feedChunk(self, chunk: str):
         self.message += chunk
-        print('====')
-        print('Fed message:', chunk)
-        print('self.message:', self.message)
-        print('====')
+        # print('====')
+        # print('Fed message:', chunk)
+        # print('self.message:', self.message)
+        # print('====')
 
         # Instruction needs to start with { so it ends up with
         # a dictionary, not array or any other data type
         if not self.message.strip().startswith('{'):
             self.message = ''
+            return
+
+        # JSON data that has more "}" than "{" is definitely malformed
+        # *ASSUMING that no string values contain "{" or "}"
+        if self.message.count('{') < self.message.count('}'):
+            self.message = ''
+            return 
 
         try:
             data = json.loads(self.message)
@@ -51,7 +58,7 @@ class BLEInstructionParser:
             # See README.md:43
 
             # If the dictionary is formed but the JSON isn't completed, keep appending new messages
-            # Case example: json.loads('{"a": true) returns {"a": True}, leaving the "}" in the next message
+            # Case example: json.loads('{"a": true') returns {"a": True}, leaving the "}" in the next message
             if self.message.count('{') != self.message.count('}'):
                 return
 
@@ -71,12 +78,13 @@ class BLEInstructionParser:
             # If the JSON is completed yet the error persists, it means malformed JSON
             # so self.message needs to be cleared so we can receive new instructions
             if self.message.count('{') == self.message.count('}'):
-                print('Clearing self.message, { and } count:', str(self.message.count('{')), str(self.message.count('}')))
+                # print('Clearing self.message, { and } count:', str(self.message.count('{')), str(self.message.count('}')))
                 self.message = "" #
 
-            print('JSON error:', e)
+            # print('JSON error:', e)
 
-    def sendMessage(self, message: dict, chunkSize: int = 20):
+    # Send a JSON instruction as well
+    def sendInstruction(self, message: dict, chunkSize: int = 20):
         stringMsg = json.dumps(message)
 
         for i in range(0, len(stringMsg), chunkSize):
